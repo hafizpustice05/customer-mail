@@ -69,11 +69,11 @@ class CustomerImport extends Command
      */
     private function insert(): void
     {
-
         $address = array(
             'country' => \fake()->country(),
             'city' => \fake()->city(),
-            'post_code' => \fake()->postcode(),
+            // 'post_code' => \fake()->postcode(),
+            'post_code' => rand(1210, 1240),
         );
 
         Customer::create([
