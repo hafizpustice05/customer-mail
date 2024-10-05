@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Auth\Blog;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class CategoryController extends Controller
 {
@@ -31,14 +33,25 @@ class CategoryController extends Controller
      */
     public function store(Request $request)
     {
-        return $request->all();
-        $fields = $request->validate([
+        // return $request->all();
+        // $fields = $request->validate([
+        //     'categoryName' => ['required', 'unique:categories', 'max:60'],
+        //     'description' => ['required']
+        // ]);
+        $validator = Validator::make($request->all(), [
             'categoryName' => ['required', 'unique:categories', 'max:60'],
             'description' => ['required']
         ]);
+        if ($validator->fails()) {
 
-        Category::create($fields);
-        return \redirect()->back();
+            $validator->errors()->add(
+                'createError',
+                'Something is wrong with this field!'
+            );
+            return \redirect('admin/category?errorOccurred=true')->withErrors($validator)->withInput();
+        }
+        Category::create($validator->validate());
+        return \redirect('admin/category');
     }
 
     /**
@@ -60,16 +73,37 @@ class CategoryController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Category $category)
     {
-        //
+        //  dd($category->id);
+        $validator = Validator::make($request->all(), [
+            'categoryName' => ['required', 'unique:categories,categoryName,' . $category->id, 'max:60'],
+            'description' => ['required']
+        ]);
+        if ($validator->fails()) {
+
+            $validator->errors()->add(
+                'updateError',
+                'Something is wrong with this field!'
+            );
+            return \redirect()->back()->withErrors($validator)->withInput();
+        }
+
+        $category->categoryName = $request->categoryName;
+        $category->description = $request->description;
+        $category->save();
+
+
+        return \redirect()->back();
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Request $ids)
+    public function destroy(Request $request): RedirectResponse
     {
-        dd($ids->all());
+        // dd($request->ids);
+        Category::whereIn('id', $request->ids)->delete();
+        return redirect()->back();
     }
 }

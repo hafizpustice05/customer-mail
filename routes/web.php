@@ -38,5 +38,9 @@ Route::name('admin.')->prefix('admin')->middleware(['auth'])->group(function () 
         'post' => PostController::class,
         'category' => CategoryController::class,
     ]);
-    Route::delete('admin/category/delete',[PostController::class,'delete'] );
+
+    Route::get('category',[CategoryController::class,'index']);
+    Route::post('category',[CategoryController::class,'store'])->name('category.store');
+    Route::put('category/{id}',[CategoryController::class,'update'])->name('category.update');
+    Route::delete('admin/category/delete',[CategoryController::class,'delete'] );
 });
