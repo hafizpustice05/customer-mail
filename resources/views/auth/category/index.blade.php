@@ -60,6 +60,7 @@
     Launch demo modal
 </button>
 
+<button onclick="domMethod()">DOM</button>
 <!-- Modal -->
 <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
@@ -75,6 +76,9 @@
                 {{ request()->query('errorOccurred') }}
 
                 @php
+                $err = $errors->toArray();
+                $old = old();
+                $catId =5;
                 if ($errors->has('updateError')){
                 $catId = old('categoryId');
                 $routes = "{{ route('admin.category.update',$catId) }}";
@@ -85,41 +89,33 @@
 
                 {{ old('categoryId') }}
 
-
-
                 <div class="row mt-5">
-                    @if ($errors->has('updateError'))
-                    <form action="{{ route('admin.category.update',old('categoryId')) }}" method="POST"
-                        id="categoryForm">
-                        @method('PUT')
+                    <form action="{{ route('admin.category.store') }}" method="POST" id="categoryForm">
 
-                        @else
-                        <form action="{{ route('admin.category.store') }}" method="POST" id="categoryForm">
-                            @endif
-                            @csrf
-                            @method('POST')
-                            <div class="mb-3">
-                                <label for="categoryName" class="form-label">Category Name </label>
-                                <input type="text" name="categoryName" required value="{{ old('categoryName') }}"
-                                    class="form-control @error('categoryName') is-invalid @enderror" id="categoryName"
-                                    aria-describedby="emailHelp">
-                                @error('categoryName')
-                                <div class="alert alert-danger">{{ $message }}</div>
-                                @enderror
-                                <input type="text" name="categoryId" value="{{old('categoryId')}}">
-                            </div>
-                            <div class="mb-3">
-                                <label for="categoryDescription" class="form-label">Description</label>
-                                <input type="text" name="description"
-                                    class="form-control @error('description') is-invalid @enderror"
-                                    id="categoryDescription" value="{{ old('description') }}">
+                        @csrf
+                        @method('POST')
+                        <div class="mb-3">
+                            <label for="categoryName" class="form-label">Category Name </label>
+                            <input type="text" name="categoryName" required value="{{ old('categoryName') }}"
+                                class="form-control @error('categoryName') is-invalid @enderror" id="categoryName"
+                                aria-describedby="emailHelp">
+                            @error('categoryName')
+                            <div class="alert alert-danger">{{ $message }}</div>
+                            @enderror
+                            <input type="text" name="categoryId" value="{{old('categoryId')}}">
+                        </div>
+                        <div class="mb-3">
+                            <label for="categoryDescription" class="form-label">Description</label>
+                            <input type="text" name="description"
+                                class="form-control @error('description') is-invalid @enderror" id="categoryDescription"
+                                value="{{ old('description') }}">
 
-                                @error('description')
-                                <div class="alert alert-danger">{{ $message }}</div>
-                                @enderror
-                            </div>
+                            @error('description')
+                            <div class="alert alert-danger">{{ $message }}</div>
+                            @enderror
+                        </div>
 
-                            <!-- <div class="mb-3">
+                        <!-- <div class="mb-3">
                     <label for="parentCategory" class="form-label">Parent Category</label>
                     <select name="parentCategoryId" class="form-control" id="parentCategory">
                         @forelse($categories as $key => $item)
@@ -128,14 +124,14 @@
                         @endforelse
 
                     </select>
-                </div> -->
+                    </div> -->
 
 
-                            <div class="float-right">
-                                <button type="submit" class="btn btn-primary">Save</button>
-                                <a type="button" href="{{ url('admin/category') }}" class="btn btn-warning">Back</a>
-                            </div>
-                        </form>
+                        <div class="float-right">
+                            <button type="submit" class="btn btn-primary">Save</button>
+                            <a type="button" href="{{ url('admin/category') }}" class="btn btn-warning">Back</a>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
@@ -165,16 +161,54 @@
 <script type="text/javascript">
     $(document).ready(function() {
 
-        init();
+        let error = @json(json_encode($err));
+        err = [];
+        try {
+            err = JSON.parse(error);
+        } catch (error) {
+            err = [];
+        }
 
-        function init() {
+
+        // $err.foreach(element => {
+        //     console.log(element);
+        // });
+        old = @json($old);
+        console.log(old);
+        console.log(err)
+        // if ($err.categoryName) alert('hi');
+
+        if (err.hasOwnProperty('categoryName')) {
+            console.log('category name has:  ', err.hasOwnProperty('categoryName'));
+        }
+
+        for (let key in err) {
+            if (err.hasOwnProperty(key)) {
+                console.log(key + ": " + err[key]);
+            }
+        }
+        init(err);
+
+        function init(error) {
             let searchParams = new URLSearchParams(window.location.search);
             // console.log(searchParams.get('errorOccurred'));
             // if (searchParams.get('errorOccurred') == 'true') {
-            $('#myModal').modal('toggle');
-            $('#myModal').modal('show');
-            // }
+
+            if (error.hasOwnProperty('updateError')) {
+                let url = "{{ route('admin.category.update', ':id') }}";
+                url = url.replace(':id', old.categoryId);
+                $("#categoryForm input[name=_method]").val("PUT");
+
+                $('#categoryForm').attr('action', url);
+            }
+            if (Object.keys(error).length > 1) {
+
+                $('#myModal').modal('toggle');
+                $('#myModal').modal('show');
+            }
         }
+
+
 
         // Initialize form validation
         $("#categoryForm").validate({
@@ -184,7 +218,7 @@
                     minlength: 3
                 },
                 description: {
-                    required: true
+                    // required: false
                 }
             },
             messages: {
@@ -199,6 +233,10 @@
             }
         });
     });
+
+    function domMethod() {
+        alert('hello');
+    }
 
     function edit(category) {
         resetFrom();
